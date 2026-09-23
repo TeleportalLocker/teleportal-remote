@@ -23,7 +23,7 @@ mod stub;
 pub use error::CursorError;
 pub use platform::poll_os_cursor;
 pub use tracker::CursorSync;
-pub use types::{normalize_pixels, CursorPose, SyncConfig};
+pub use types::{normalize_in_display, normalize_pixels, CursorPose, SyncConfig};
 
 use teleportal_shared::VERSION;
 
@@ -45,7 +45,7 @@ mod tests {
     #[cfg(not(any(windows, target_os = "macos")))]
     #[test]
     fn poll_unsupported() {
-        let err = poll_os_cursor(1920, 1080).unwrap_err();
+        let err = poll_os_cursor(0, 0, 1920, 1080).unwrap_err();
         assert!(matches!(err, CursorError::UnsupportedPlatform));
     }
 }

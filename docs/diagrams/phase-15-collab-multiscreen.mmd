@@ -1,0 +1,13 @@
+%% Phase 15 — Curseur collaboratif, multi-écran, PeerLeft
+
+flowchart LR
+  guestPtr[Guest_pointer]
+  cursorMsg[CursorMove]
+  relay[Relay]
+  overlay[Host_overlay]
+  hostPoll[poll_os_cursor]
+  capture[Capture_SessionDisplay]
+  guestPtr --> cursorMsg --> relay --> overlay
+  hostPoll --> cursorMsg
+  capture -.-> overlay
+  peerLeft[PeerLeft] --> idle[Idle_close_WS]

@@ -53,6 +53,12 @@ fn on_session_state(app: &AppHandle, snapshot: SessionState) {
         if let Ok(mut guard) = st.last_state.lock() {
             *guard = snapshot.clone();
         }
+        // PeerLeft / fin de boucle → Idle|Error : libère le slot session.
+        if matches!(snapshot, SessionState::Idle | SessionState::Error { .. }) {
+            if let Ok(mut guard) = st.session.lock() {
+                let _ = guard.take();
+            }
+        }
     }
     overlay::sync_host_overlay(app, &snapshot);
     let _ = app.emit("session-state", snapshot);

@@ -1,6 +1,6 @@
 # Checklist de validation — Phase 14
 
-À cocher avant validation explicite et passage à la Phase 15 (Audit final).
+À cocher avant validation explicite et passage à la Phase 15 (curseur collab / multi-écran).
 
 ## Livrables
 
@@ -35,4 +35,4 @@
 
 ## Validation
 
-- [ ] Revue humaine / validation explicite pour ouvrir la **Phase 15 — Audit final**
+- [x] Revue humaine / validation explicite pour ouvrir la **Phase 15 — Curseur collab / multi-écran**

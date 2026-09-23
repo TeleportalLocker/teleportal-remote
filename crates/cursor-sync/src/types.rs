@@ -65,6 +65,31 @@ pub fn normalize_pixels(px: i32, py: i32, display_w: u32, display_h: u32) -> (f3
     (x, y)
 }
 
+/// Normalise une position écran virtuel relative à un display (multi-moniteur).
+///
+/// Retourne `None` si le point est hors du rectangle capturé.
+#[must_use]
+pub fn normalize_in_display(
+    px: i32,
+    py: i32,
+    origin_x: i32,
+    origin_y: i32,
+    display_w: u32,
+    display_h: u32,
+) -> Option<(f32, f32)> {
+    let lx = px.saturating_sub(origin_x);
+    let ly = py.saturating_sub(origin_y);
+    if lx < 0 || ly < 0 {
+        return None;
+    }
+    let lx = lx as u32;
+    let ly = ly as u32;
+    if lx >= display_w || ly >= display_h {
+        return None;
+    }
+    Some(normalize_pixels(lx as i32, ly as i32, display_w, display_h))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,6 +98,16 @@ mod tests {
     fn normalize_corners() {
         assert_eq!(normalize_pixels(0, 0, 100, 50), (0.0, 0.0));
         assert_eq!(normalize_pixels(99, 49, 100, 50), (1.0, 1.0));
+    }
+
+    #[test]
+    fn normalize_in_display_secondary() {
+        // Second moniteur à x=1920
+        assert_eq!(
+            normalize_in_display(1920, 0, 1920, 0, 1920, 1080),
+            Some((0.0, 0.0))
+        );
+        assert_eq!(normalize_in_display(100, 100, 1920, 0, 1920, 1080), None);
     }
 
     #[test]

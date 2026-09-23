@@ -8,9 +8,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde::Serialize;
-use teleportal_capture::{CaptureConfig, CaptureError, Capturer, PlatformCapturer};
+use teleportal_capture::{CaptureConfig, CaptureError, Capturer, DisplayInfo, PlatformCapturer};
 use teleportal_cursor_sync::{poll_os_cursor, CursorPose, CursorSync, SyncConfig};
-use teleportal_input::{InjectConfig, InputError, InputInjector, PlatformInjector};
 use teleportal_protocol::{
     Message, PeerId, Role, SessionCode, SessionId, VideoCodec, PROTOCOL_VERSION,
 };
@@ -122,13 +121,52 @@ fn unix_now_ms() -> u64 {
         .unwrap_or(0)
 }
 
-fn primary_display_size() -> (u32, u32) {
-    if let Ok(displays) = PlatformCapturer::displays() {
-        if let Some(d) = displays.first() {
-            return (d.width.max(1), d.height.max(1));
+/// Géométrie du display capturé (alignée overlay / normalize).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SessionDisplay {
+    /// Index capture.
+    pub index: usize,
+    /// Origine X écran virtuel.
+    pub origin_x: i32,
+    /// Origine Y écran virtuel.
+    pub origin_y: i32,
+    /// Largeur pixels.
+    pub width: u32,
+    /// Hauteur pixels.
+    pub height: u32,
+}
+
+impl From<&DisplayInfo> for SessionDisplay {
+    fn from(d: &DisplayInfo) -> Self {
+        Self {
+            index: d.index,
+            origin_x: d.origin_x,
+            origin_y: d.origin_y,
+            width: d.width.max(1),
+            height: d.height.max(1),
         }
     }
-    (1920, 1080)
+}
+
+/// Résout le display de session : primaire (origine 0,0) sinon premier.
+#[must_use]
+pub fn resolve_session_display() -> SessionDisplay {
+    if let Ok(displays) = PlatformCapturer::displays() {
+        let chosen = displays
+            .iter()
+            .find(|d| d.origin_x == 0 && d.origin_y == 0)
+            .or_else(|| displays.first());
+        if let Some(d) = chosen {
+            return SessionDisplay::from(d);
+        }
+    }
+    SessionDisplay {
+        index: 0,
+        origin_x: 0,
+        origin_y: 0,
+        width: 1920,
+        height: 1080,
+    }
 }
 
 fn peer_connected(state: &SessionState) -> bool {
@@ -167,20 +205,8 @@ pub fn apply_signal(state: SessionState, message: &Message) -> SessionState {
             code,
             peer_connected: true,
         },
-        (
-            SessionState::InSession {
-                role,
-                session_id,
-                code,
-                ..
-            },
-            Message::PeerLeft { .. },
-        ) => SessionState::InSession {
-            role,
-            session_id,
-            code,
-            peer_connected: false,
-        },
+        (SessionState::InSession { .. }, Message::PeerLeft { .. }) => SessionState::Idle,
+        (SessionState::Hosting { .. }, Message::PeerLeft { .. }) => SessionState::Idle,
         (_, Message::SessionExpired) => SessionState::Error {
             message: "session expirée".into(),
         },
@@ -390,19 +416,6 @@ fn map_capture_error(err: CaptureError) -> String {
     }
 }
 
-fn map_input_error(err: InputError) -> String {
-    match err {
-        InputError::PermissionDenied => {
-            "permission Accessibilité refusée — activez-la dans Réglages système pour Teleportal"
-                .into()
-        }
-        InputError::UnsupportedPlatform => {
-            "injection d’input non supportée sur cette plateforme".into()
-        }
-        other => format!("input: {other}"),
-    }
-}
-
 fn is_control_message(msg: &Message) -> bool {
     matches!(
         msg,
@@ -413,24 +426,20 @@ fn is_control_message(msg: &Message) -> bool {
     )
 }
 
-fn start_host_injector() -> Result<PlatformInjector, String> {
-    let mut config = InjectConfig::default();
-    if let Ok(displays) = PlatformCapturer::displays() {
-        if let Some(d) = displays.first() {
-            config.display_width = d.width.max(1);
-            config.display_height = d.height.max(1);
-        }
-    }
-    PlatformInjector::start(config).map_err(map_input_error)
-}
-
-fn start_host_capture(media_tx: mpsc::Sender<MediaOut>) -> (Arc<AtomicBool>, JoinHandle<()>) {
+fn start_host_capture(
+    media_tx: mpsc::Sender<MediaOut>,
+    display: SessionDisplay,
+) -> (Arc<AtomicBool>, JoinHandle<()>) {
     let stop = Arc::new(AtomicBool::new(false));
     let stop_flag = Arc::clone(&stop);
     let join = std::thread::Builder::new()
         .name("teleportal-host-capture".into())
         .spawn(move || {
-            let mut capturer = match PlatformCapturer::start(CaptureConfig::default()) {
+            let config = CaptureConfig {
+                display_index: display.index,
+                max_fps: 30,
+            };
+            let mut capturer = match PlatformCapturer::start(config) {
                 Ok(c) => c,
                 Err(e) => {
                     let _ = media_tx.blocking_send(MediaOut::Fatal(map_capture_error(e)));
@@ -514,9 +523,8 @@ fn spawn_session_loop(
             None
         };
 
-        let mut injector: Option<PlatformInjector> = None;
         let mut cursor_sync = CursorSync::new(SyncConfig::default());
-        let (display_w, display_h) = primary_display_size();
+        let display = resolve_session_display();
         let mut last_host_cursor_poll = Instant::now()
             .checked_sub(Duration::from_millis(50))
             .unwrap_or_else(Instant::now);
@@ -527,14 +535,7 @@ fn spawn_session_loop(
         let mut host_join: Option<JoinHandle<()>> = None;
 
         if matches!(role, Role::Host) && host_should_stream(&state) {
-            match start_host_injector() {
-                Ok(inj) => injector = Some(inj),
-                Err(message) => {
-                    on_state(SessionState::Error { message });
-                    return;
-                }
-            }
-            let (stop, handle) = start_host_capture(media_tx.clone());
+            let (stop, handle) = start_host_capture(media_tx.clone(), display);
             host_stop = Some(stop);
             host_join = Some(handle);
         }
@@ -552,10 +553,12 @@ fn spawn_session_loop(
                             break;
                         }
                         Some(SessionCommand::Send(msg)) => {
-                            if matches!(role, Role::Guest) && is_control_message(&msg) {
-                                if let Err(e) = send_message(&mut conn, &msg).await {
-                                    warn!(error = %e, "failed to send control");
-                                }
+                            // Phase 15 : pas d’injection — ignore Mouse*/Key côté Guest.
+                            if is_control_message(&msg) {
+                                continue;
+                            }
+                            if let Err(e) = send_message(&mut conn, &msg).await {
+                                warn!(error = %e, "failed to send message");
                             }
                         }
                         Some(SessionCommand::CursorPos { x, y }) => {
@@ -577,13 +580,21 @@ fn spawn_session_loop(
                         && last_host_cursor_poll.elapsed() >= Duration::from_millis(50)
                     {
                         last_host_cursor_poll = Instant::now();
-                        match poll_os_cursor(display_w, display_h) {
-                            Ok((x, y)) => {
+                        match poll_os_cursor(
+                            display.origin_x,
+                            display.origin_y,
+                            display.width,
+                            display.height,
+                        ) {
+                            Ok(Some((x, y))) => {
                                 if let Some(msg) = cursor_sync.push_local(x, y, now) {
                                     if let Err(e) = send_message(&mut conn, &msg).await {
                                         warn!(error = %e, "failed to send host cursor");
                                     }
                                 }
+                            }
+                            Ok(None) => {
+                                // Curseur hors du display capturé — pas d’envoi.
                             }
                             Err(e) => {
                                 warn!(error = %e, "host cursor poll failed");
@@ -639,20 +650,8 @@ fn spawn_session_loop(
                                 continue;
                             }
 
-                            if matches!(role, Role::Host) && is_control_message(&msg) {
-                                if let Some(inj) = injector.as_mut() {
-                                    if let Err(e) = inj.inject(&msg) {
-                                        warn!(error = %e, "inject failed");
-                                        if matches!(e, InputError::PermissionDenied) {
-                                            stop_host_capture(&host_stop, &mut host_join);
-                                            host_stop = None;
-                                            on_state(SessionState::Error {
-                                                message: map_input_error(e),
-                                            });
-                                            break;
-                                        }
-                                    }
-                                }
+                            // Phase 15 : ignore Mouse*/Key — pas d’injection OS.
+                            if is_control_message(&msg) {
                                 continue;
                             }
 
@@ -671,30 +670,28 @@ fn spawn_session_loop(
                                 on_state(next);
                             }
 
+                            if matches!(state, SessionState::Idle) {
+                                stop_host_capture(&host_stop, &mut host_join);
+                                host_stop = None;
+                                let _ = send_message(&mut conn, &Message::LeaveSession).await;
+                                let _ = conn.close().await;
+                                info!("peer left — session closed");
+                                break;
+                            }
+
                             if matches!(role, Role::Host) {
                                 let now_streaming = host_should_stream(&state);
                                 if !was_streaming && now_streaming {
-                                    match start_host_injector() {
-                                        Ok(inj) => injector = Some(inj),
-                                        Err(message) => {
-                                            stop_host_capture(&host_stop, &mut host_join);
-                                            host_stop = None;
-                                            on_state(SessionState::Error { message });
-                                            break;
-                                        }
-                                    }
                                     stop_host_capture(&host_stop, &mut host_join);
-                                    let (stop, handle) = start_host_capture(media_tx.clone());
+                                    let (stop, handle) =
+                                        start_host_capture(media_tx.clone(), display);
                                     host_stop = Some(stop);
                                     host_join = Some(handle);
-                                    info!("host capture + injector started");
+                                    info!("host capture started");
                                 } else if was_streaming && !now_streaming {
                                     stop_host_capture(&host_stop, &mut host_join);
                                     host_stop = None;
-                                    if let Some(inj) = injector.take() {
-                                        let _ = inj.stop();
-                                    }
-                                    info!("host capture + injector stopped");
+                                    info!("host capture stopped");
                                 }
                             }
                         }
@@ -715,9 +712,6 @@ fn spawn_session_loop(
         stop_host_capture(&host_stop, &mut host_join);
         if let Some(dec) = decoder.take() {
             let _ = dec.stop();
-        }
-        if let Some(inj) = injector.take() {
-            let _ = inj.stop();
         }
     });
     ActiveSession { cmd_tx, join }
@@ -757,7 +751,7 @@ mod tests {
     }
 
     #[test]
-    fn peer_left_clears_flag() {
+    fn peer_left_goes_idle() {
         let state = SessionState::InSession {
             role: "guest".into(),
             session_id: "sid".into(),
@@ -770,13 +764,24 @@ mod tests {
                 peer_id: PeerId::new(),
             },
         );
-        assert!(!matches!(
-            next,
-            SessionState::InSession {
-                peer_connected: true,
-                ..
-            }
-        ));
+        assert_eq!(next, SessionState::Idle);
+    }
+
+    #[test]
+    fn peer_left_host_goes_idle() {
+        let state = SessionState::InSession {
+            role: "host".into(),
+            session_id: "sid".into(),
+            code: Some("123456".into()),
+            peer_connected: true,
+        };
+        let next = apply_signal(
+            state,
+            &Message::PeerLeft {
+                peer_id: PeerId::new(),
+            },
+        );
+        assert_eq!(next, SessionState::Idle);
     }
 
     #[test]

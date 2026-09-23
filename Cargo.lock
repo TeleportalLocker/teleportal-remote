@@ -4128,7 +4128,6 @@ dependencies = [
  "tauri-plugin-updater",
  "teleportal-capture",
  "teleportal-cursor-sync",
- "teleportal-input",
  "teleportal-protocol",
  "teleportal-shared",
  "teleportal-transport",

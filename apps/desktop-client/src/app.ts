@@ -66,46 +66,7 @@ const model: AppModel = {
 
 let lastFrame: VideoFramePayload | null = null;
 let painting = false;
-let lastMoveSentMs = 0;
-let keyListenerAttached = false;
 let lastRemoteCursor: RemoteCursorPayload | null = null;
-
-const MOVE_THROTTLE_MS = 33; // ~30 Hz (contrôle) ; curseur throttlé ~20 Hz côté Rust
-
-type ControlMessage =
-  | { type: "mouse_move"; x: number; y: number; timestamp_ms: number }
-  | {
-      type: "mouse_button";
-      button: "left" | "right" | "middle";
-      pressed: boolean;
-      x: number;
-      y: number;
-      timestamp_ms: number;
-    }
-  | {
-      type: "mouse_scroll";
-      dx: number;
-      dy: number;
-      x: number;
-      y: number;
-      timestamp_ms: number;
-    }
-  | {
-      type: "key_event";
-      key: string;
-      pressed: boolean;
-      modifiers: {
-        shift: boolean;
-        ctrl: boolean;
-        alt: boolean;
-        meta: boolean;
-      };
-      timestamp_ms: number;
-    };
-
-function nowMs(): number {
-  return Date.now();
-}
 
 function normCoords(canvas: HTMLCanvasElement, clientX: number, clientY: number): {
   x: number;
@@ -118,22 +79,6 @@ function normCoords(canvas: HTMLCanvasElement, clientX: number, clientY: number)
     x: Math.min(1, Math.max(0, x)),
     y: Math.min(1, Math.max(0, y)),
   };
-}
-
-function mapButton(button: number): "left" | "right" | "middle" | null {
-  if (button === 0) return "left";
-  if (button === 1) return "middle";
-  if (button === 2) return "right";
-  return null;
-}
-
-async function sendControl(message: ControlMessage): Promise<void> {
-  if (!isGuestSession(model.state)) return;
-  try {
-    await invoke("send_control", { message });
-  } catch {
-    // Ignore transient send errors (session ending, etc.)
-  }
 }
 
 async function sendCursorPos(x: number, y: number): Promise<void> {
@@ -173,90 +118,15 @@ function bindGuestControls(canvas: HTMLCanvasElement): void {
 
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
+  // Phase 15 : curseur collaboratif uniquement (pas d’injection souris Host).
   canvas.addEventListener("pointermove", (e) => {
     const { x, y } = normCoords(canvas, e.clientX, e.clientY);
     void sendCursorPos(x, y);
-    const t = nowMs();
-    if (t - lastMoveSentMs < MOVE_THROTTLE_MS) return;
-    lastMoveSentMs = t;
-    void sendControl({ type: "mouse_move", x, y, timestamp_ms: t });
-  });
-
-  canvas.addEventListener("pointerdown", (e) => {
-    canvas.setPointerCapture(e.pointerId);
-    const button = mapButton(e.button);
-    if (!button) return;
-    const { x, y } = normCoords(canvas, e.clientX, e.clientY);
-    void sendControl({
-      type: "mouse_button",
-      button,
-      pressed: true,
-      x,
-      y,
-      timestamp_ms: nowMs(),
-    });
-  });
-
-  canvas.addEventListener("pointerup", (e) => {
-    const button = mapButton(e.button);
-    if (!button) return;
-    const { x, y } = normCoords(canvas, e.clientX, e.clientY);
-    void sendControl({
-      type: "mouse_button",
-      button,
-      pressed: false,
-      x,
-      y,
-      timestamp_ms: nowMs(),
-    });
-  });
-
-  canvas.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      const { x, y } = normCoords(canvas, e.clientX, e.clientY);
-      const dy = e.deltaY === 0 ? 0 : e.deltaY > 0 ? -1 : 1;
-      const dx = e.deltaX === 0 ? 0 : e.deltaX > 0 ? 1 : -1;
-      void sendControl({
-        type: "mouse_scroll",
-        dx,
-        dy,
-        x,
-        y,
-        timestamp_ms: nowMs(),
-      });
-    },
-    { passive: false },
-  );
-}
-
-function onKeyEvent(e: KeyboardEvent, pressed: boolean): void {
-  if (!isGuestSession(model.state) || model.screen !== "session") return;
-  if (e.repeat && pressed) return;
-  // Ne pas capturer les raccourcis navigateur seuls hors canvas focus
-  const canvas = document.getElementById("video-canvas");
-  if (!canvas || document.activeElement !== canvas) return;
-  e.preventDefault();
-  void sendControl({
-    type: "key_event",
-    key: e.code,
-    pressed,
-    modifiers: {
-      shift: e.shiftKey,
-      ctrl: e.ctrlKey,
-      alt: e.altKey,
-      meta: e.metaKey,
-    },
-    timestamp_ms: nowMs(),
   });
 }
 
 function ensureKeyListeners(): void {
-  if (keyListenerAttached) return;
-  keyListenerAttached = true;
-  window.addEventListener("keydown", (e) => onKeyEvent(e, true));
-  window.addEventListener("keyup", (e) => onKeyEvent(e, false));
+  // Phase 15 : pas de prise de contrôle clavier.
 }
 
 function isGuestSession(state: SessionState): boolean {
@@ -373,7 +243,7 @@ function render(): void {
           <div class="video-host">
             ${
               host && model.state.kind === "inSession" && model.state.peerConnected
-                ? "Diffusion active — curseur distant sur votre bureau (overlay)"
+                ? "Diffusion active — curseur collaboratif distant (overlay, sans prise de contrôle)"
                 : "En attente de diffusion…"
             }
           </div>
@@ -407,7 +277,7 @@ function render(): void {
   root.innerHTML = `
     <main class="shell">
       <h1 class="brand">Teleportal Remote</h1>
-      <p class="lede">Contrôle à distance collaboratif. Connectez-vous via un code à 6 chiffres.</p>
+      <p class="lede">Partage d’écran collaboratif. Connectez-vous via un code à 6 chiffres.</p>
       <div class="stack">
         <label>
           URL du relay
@@ -511,6 +381,7 @@ export async function startApp(): Promise<void> {
     model.state = event.payload;
     if (event.payload.kind === "idle") {
       model.screen = "home";
+      model.error = null;
       lastFrame = null;
       clearRemoteCursor();
     } else if (event.payload.kind === "error") {
@@ -519,12 +390,6 @@ export async function startApp(): Promise<void> {
       model.state = { kind: "idle" };
       lastFrame = null;
       clearRemoteCursor();
-    } else if (
-      event.payload.kind === "inSession" &&
-      !event.payload.peerConnected
-    ) {
-      clearRemoteCursor();
-      model.screen = "session";
     } else {
       model.screen = "session";
     }

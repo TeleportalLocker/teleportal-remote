@@ -17,6 +17,10 @@ pub struct DisplayInfo {
     pub index: usize,
     /// Nom lisible (device / output).
     pub name: String,
+    /// Origine X en pixels écran virtuel (multi-moniteur).
+    pub origin_x: i32,
+    /// Origine Y en pixels écran virtuel (multi-moniteur).
+    pub origin_y: i32,
     /// Largeur en pixels.
     pub width: u32,
     /// Hauteur en pixels.

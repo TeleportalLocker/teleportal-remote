@@ -332,7 +332,8 @@ Ne jamais développer plusieurs phases simultanément. Attendre la **validation 
 | 12    | Installateurs                    |
 | 13    | Auto-update                      |
 | 14    | Durcissement                     |
-| 15    | Audit final                      |
+| 15    | Curseur collab, multi-écran, fin session |
+| 16    | Audit final                      |
 
 ### Livrables obligatoires par phase
 

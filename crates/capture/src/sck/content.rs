@@ -31,14 +31,29 @@ pub(crate) fn list_displays() -> Result<Vec<DisplayInfo>, CaptureError> {
     Ok(displays
         .into_iter()
         .enumerate()
-        .map(|(index, d)| DisplayInfo {
-            id: DisplayId(d.display_id()),
-            index,
-            name: format!("Display {}", d.display_id()),
-            width: d.width(),
-            height: d.height(),
+        .map(|(index, d)| {
+            let display_id = d.display_id();
+            let (origin_x, origin_y) = cg_display_origin(display_id);
+            DisplayInfo {
+                id: DisplayId(display_id),
+                index,
+                name: format!("Display {display_id}"),
+                origin_x,
+                origin_y,
+                width: d.width(),
+                height: d.height(),
+            }
         })
         .collect())
+}
+
+fn cg_display_origin(display_id: u32) -> (i32, i32) {
+    use core_graphics::display::CGDisplay;
+    let bounds = CGDisplay::new(display_id).bounds();
+    (
+        bounds.origin.x.round() as i32,
+        bounds.origin.y.round() as i32,
+    )
 }
 
 pub(crate) fn map_sck(err: impl std::fmt::Display) -> CaptureError {

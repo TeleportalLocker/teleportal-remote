@@ -41,6 +41,7 @@ pub(crate) fn list_outputs() -> Result<Vec<OutputRef>, CaptureError> {
             let (width, height) = desktop_size(&desc);
             let name = wide_to_string(&desc.DeviceName);
             let id = DisplayId((adapter_index << 16) | output_index);
+            let rect = desc.DesktopCoordinates;
 
             displays.push(OutputRef {
                 adapter_index,
@@ -49,6 +50,8 @@ pub(crate) fn list_outputs() -> Result<Vec<OutputRef>, CaptureError> {
                     id,
                     index: global_index,
                     name,
+                    origin_x: rect.left,
+                    origin_y: rect.top,
                     width,
                     height,
                 },

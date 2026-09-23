@@ -10,7 +10,7 @@ Développé entièrement en Rust (Cargo Workspace). Voir [`docs/TELEPORTAL_REMOT
 - Node.js 20+ (frontend Vite du client)
 - macOS : Xcode Command Line Tools
 - macOS (capture) : permission **Screen Recording** (Réglages système → Confidentialité et sécurité)
-- macOS (contrôle distant) : permission **Accessibilité** pour l’injection CGEvent (Host)
+- macOS (contrôle distant, futur toggle) : permission **Accessibilité** pour l’injection CGEvent (Host) — non utilisée en Phase 15
 
 ## Build & qualité
 
@@ -35,7 +35,9 @@ cd apps/desktop-client && npm ci && npm run build
 
 ## Phase en cours
 
-**Phase 14 — Durcissement** (Docker + TLS reverse-proxy, rate-limits relay, préparation signature OS). Signature Authenticode / notarisation Apple reportée jusqu’à obtention des certificats.
+**Phase 15 — Curseur collaboratif, multi-écran & fin de session** (pas d’injection OS ; géométrie display unique ; `PeerLeft` → Idle). Audit final reporté en **Phase 16**.
+
+Prérequis Host : permission **Screen Recording** (capture). L’Accessibilité n’est plus requise en session tant que le contrôle distant (injection) n’est pas réactivé.
 
 ### Lancer le relay
 
