@@ -1,0 +1,14 @@
+%% Phase 14 — Durcissement
+
+flowchart LR
+  client[desktop_client]
+  caddy[Caddy]
+  relay[teleportal_relay]
+  gh[GitHub_Releases]
+  gha[release_yml]
+
+  client -->|"ws or wss"| caddy
+  caddy -->|"http :7800"| relay
+  client -->|"HTTPS latest.json"| gh
+  gha -->|"installers + sigs"| gh
+  gha -.->|"APPLE_WINDOWS secrets optional"| gha

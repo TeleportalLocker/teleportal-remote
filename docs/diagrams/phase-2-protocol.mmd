@@ -1,0 +1,16 @@
+%% Phase 2 — Flux Create / Join (relay implémenté en Phase 3)
+
+sequenceDiagram
+  participant Host
+  participant Relay as RelayFuture
+  participant Guest
+
+  Host->>Relay: Hello role Host
+  Host->>Relay: CreateSession
+  Relay-->>Host: SessionCreated code
+  Guest->>Relay: Hello role Guest
+  Guest->>Relay: JoinSession code
+  Relay-->>Guest: JoinAccepted
+  Relay-->>Host: PeerJoined
+  Host->>Relay: CursorMove
+  Relay-->>Guest: CursorMove

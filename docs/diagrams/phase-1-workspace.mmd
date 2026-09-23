@@ -1,0 +1,29 @@
+%% Phase 1 — Membres du workspace et dépendances câblées
+%% Seules les arêtes vers teleportal-shared sont actives.
+
+flowchart TB
+  subgraph apps [apps]
+    desktop[teleportal-desktop-client]
+    relay[teleportal-relay-server]
+  end
+
+  subgraph crates [crates]
+    shared[teleportal-shared]
+    capture[teleportal-capture]
+    input[teleportal-input]
+    protocol[teleportal-protocol]
+    transport[teleportal-transport]
+    video[teleportal-video-stream]
+    cursor[teleportal-cursor-sync]
+    updater[teleportal-updater]
+  end
+
+  desktop --> shared
+  relay --> shared
+  capture --> shared
+  input --> shared
+  protocol --> shared
+  transport --> shared
+  video --> shared
+  cursor --> shared
+  updater --> shared

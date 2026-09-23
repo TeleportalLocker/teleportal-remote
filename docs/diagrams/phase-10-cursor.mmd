@@ -1,0 +1,13 @@
+%% Phase 10 — Double curseur
+
+flowchart LR
+  localPos[Local_pointer_or_OS]
+  sync[CursorSync_20Hz]
+  wsOut[WS_CursorMove]
+  relay[Relay]
+  wsIn[WS_peer]
+  track[Remote_tracker_interp]
+  emit[emit_remote_cursor]
+  html[HTML_marker]
+
+  localPos --> sync --> wsOut --> relay --> wsIn --> track --> emit --> html

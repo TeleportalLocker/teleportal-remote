@@ -1,0 +1,13 @@
+%% Phase 8 — Affichage vidéo
+
+flowchart LR
+  capt[PlatformCapturer]
+  enc[OpenH264Encoder]
+  wsH[WS_Host]
+  relay[Relay]
+  wsG[WS_Guest]
+  dec[OpenH264Decoder]
+  evt[video_frame_event]
+  canvas[Canvas_2D]
+
+  capt --> enc --> wsH --> relay --> wsG --> dec --> evt --> canvas

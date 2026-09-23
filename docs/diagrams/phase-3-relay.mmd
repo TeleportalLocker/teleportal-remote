@@ -1,0 +1,18 @@
+%% Phase 3 — Relay Create / Join / forward
+
+sequenceDiagram
+  participant Host
+  participant Relay
+  participant Guest
+
+  Host->>Relay: WS Hello Host
+  Host->>Relay: CreateSession
+  Relay-->>Host: SessionCreated code
+  Guest->>Relay: WS Hello Guest
+  Guest->>Relay: JoinSession code
+  Relay-->>Guest: JoinAccepted
+  Relay-->>Host: PeerJoined
+  Host->>Relay: CursorMove
+  Relay-->>Guest: CursorMove
+  Guest->>Relay: LeaveSession
+  Relay-->>Host: PeerLeft

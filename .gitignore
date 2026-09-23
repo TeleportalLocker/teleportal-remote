@@ -1,0 +1,34 @@
+# Rust / Cargo
+/target/
+**/*.rs.bk
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+infra/release/.updater-private.key
+infra/release/.updater-private.key.pub
+*.p12
+*.pem
+*.p8
+!infra/release/updater.pubkey
+
+# Logs & temp
+*.log
+tmp/
+temp/
+
+# Tauri / packaging (phases ultérieures)
+*.dmg
+*.msi
+*.exe
+*.AppImage
+*.sig

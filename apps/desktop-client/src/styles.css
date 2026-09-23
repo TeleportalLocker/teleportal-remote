@@ -1,0 +1,232 @@
+:root {
+  color-scheme: light;
+  --bg0: #f3f6f4;
+  --bg1: #e7eee9;
+  --ink: #14201c;
+  --muted: #5b6b64;
+  --accent: #0f766e;
+  --accent-ink: #f5fffc;
+  --danger: #b42318;
+  --line: rgba(20, 32, 28, 0.12);
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", serif;
+  --font-body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Cascadia Mono", "Consolas", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #d9ebe4 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg0), var(--bg1));
+}
+
+body {
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+}
+
+.shell {
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.lede {
+  margin: 0;
+  color: var(--muted);
+  max-width: 36rem;
+  line-height: 1.45;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+input {
+  font: inherit;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  padding: 0.7rem 0.85rem;
+}
+
+input:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, white);
+  outline-offset: 1px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  border: 1px solid transparent;
+  padding: 0.7rem 1.1rem;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+button.ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+  letter-spacing: 0.28em;
+  margin: 0;
+  padding-left: 0.28em;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.video-placeholder {
+  min-height: 240px;
+  border: 1px dashed var(--line);
+  border-radius: 0.5rem;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.video-canvas {
+  width: 100%;
+  max-height: min(70vh, 720px);
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #0b1210;
+  border-radius: 0.5rem;
+  display: block;
+}
+
+.video-stage {
+  position: relative;
+  width: 100%;
+}
+
+.video-stage .video-canvas,
+.video-stage .video-host {
+  width: 100%;
+}
+
+.video-stage-host .video-host {
+  min-height: 240px;
+}
+
+.remote-cursor {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin-left: -2px;
+  margin-top: -2px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: #c45c26;
+  border: 2px solid #fff8f3;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 1px 2px rgba(20, 32, 28, 0.35);
+}
+
+html.overlay-mode,
+body.overlay-mode {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+body.overlay-mode #app {
+  min-height: 100%;
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding: 0;
+  place-items: unset;
+}
+
+.overlay-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  pointer-events: none;
+}
+
+.video-host {
+  min-height: 240px;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.shell-session {
+  width: min(960px, 100%);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

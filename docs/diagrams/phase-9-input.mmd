@@ -1,0 +1,12 @@
+%% Phase 9 — Contrôle souris / clavier
+
+flowchart LR
+  canvas[Guest_canvas]
+  cmd[send_control]
+  wsG[WS_Guest]
+  relay[Relay]
+  wsH[WS_Host]
+  inj[PlatformInjector]
+  os[OS_SendInput_CGEvent]
+
+  canvas --> cmd --> wsG --> relay --> wsH --> inj --> os

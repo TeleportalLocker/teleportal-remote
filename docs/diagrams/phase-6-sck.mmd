@@ -1,0 +1,11 @@
+%% Phase 6 — Pipeline ScreenCaptureKit
+
+flowchart LR
+  content[SCShareableContent]
+  stream[SCStream]
+  cb[Output_callback]
+  buf[LatestFrame_Mutex]
+  grab[Capturer_grab]
+  frame[Frame_BGRA8]
+
+  content --> stream --> cb --> buf --> grab --> frame

@@ -1,0 +1,12 @@
+%% Phase 12 — Release installateurs
+
+flowchart LR
+  tag[git_tag_vX]
+  win[windows_latest]
+  mac[macos_14]
+  artWin[nsis_exe_plus_msi]
+  artMac[dmg_arm_plus_dmg_x64]
+  gh[GitHub_Release]
+
+  tag --> win --> artWin --> gh
+  tag --> mac --> artMac --> gh

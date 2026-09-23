@@ -1,0 +1,14 @@
+%% Phase 13 — Auto-update
+
+flowchart LR
+  release[GHA_release]
+  arts[installers_plus_sigs]
+  json[latest_json]
+  gh[GitHub_Release]
+  app[desktop_client]
+  plugin[tauri_plugin_updater]
+
+  release --> arts --> gh
+  release --> json --> gh
+  app --> plugin -->|"GET latest.json"| gh
+  plugin -->|"verify minisign"| arts

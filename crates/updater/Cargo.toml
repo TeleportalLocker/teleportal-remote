@@ -1,0 +1,10 @@
+[package]
+name = "teleportal-updater"
+description = "Helpers auto-update (canal stable, manifeste GitHub)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+teleportal-shared = { workspace = true }

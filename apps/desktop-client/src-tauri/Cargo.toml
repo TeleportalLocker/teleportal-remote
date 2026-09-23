@@ -1,0 +1,38 @@
+[package]
+name = "teleportal-desktop-client"
+description = "Client desktop Teleportal Remote (Tauri v2)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "teleportal_desktop_client_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "teleportal-desktop-client"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+base64 = "0.22"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { workspace = true, features = ["macos-private-api"] }
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
+teleportal-capture = { workspace = true }
+teleportal-cursor-sync = { workspace = true }
+teleportal-input = { workspace = true }
+teleportal-protocol = { workspace = true }
+teleportal-shared = { workspace = true }
+teleportal-transport = { workspace = true }
+teleportal-updater = { workspace = true }
+teleportal-video-stream = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }

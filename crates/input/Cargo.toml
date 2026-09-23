@@ -1,0 +1,24 @@
+[package]
+name = "teleportal-input"
+description = "Injection clavier / souris (SendInput / CGEvent)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+teleportal-protocol = { workspace = true }
+teleportal-shared = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-graphics = { version = "0.25", features = ["highsierra"] }

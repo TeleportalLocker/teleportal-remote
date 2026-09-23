@@ -1,0 +1,11 @@
+%% Phase 7 — Encode H264 (OpenH264)
+
+flowchart LR
+  frame[Frame_BGRA8]
+  pack[Pack_dense]
+  yuv[YUV420]
+  enc[OpenH264]
+  annex[Annex_B]
+  msg[Message_VideoFrame]
+
+  frame --> pack --> yuv --> enc --> annex --> msg

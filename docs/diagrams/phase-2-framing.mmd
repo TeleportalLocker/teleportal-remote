@@ -1,0 +1,13 @@
+%% Phase 2 — Pipeline encode / decode
+
+flowchart LR
+  msg[Message]
+  val[validate_message]
+  enc[encode_message]
+  wire[u32BE_plus_MessagePack]
+  send[Connection_send]
+  recv[Connection_recv]
+  dec[decode_message]
+
+  msg --> val --> enc --> wire --> send
+  recv --> dec --> msg

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TeleportalRemote",
+  "version": "0.1.0",
+  "identifier": "remote.teleportal.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "title": "Teleportal Remote",
+        "width": 960,
+        "height": 640,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "targets": ["nsis", "msi", "dmg", "app"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/henry.w@example.net",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0NDlERjcxNDMyNDQ0OUQKUldTZFJDUkRjZDlKcEtEQVh6WERkT0N4KzJpcjRBZkU4eWlEZzYxMFg0Z3ZnOWRrM0hhSnptdkYK",
+      "endpoints": [
+        "https://github.com/teleportal/teleportal-remote/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

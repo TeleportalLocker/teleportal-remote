@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.tauri.app/config/2/capability",
+  "identifier": "default",
+  "description": "Capability par défaut du client Teleportal",
+  "windows": ["main", "cursor-overlay"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:webview:default",
+    "core:window:allow-set-ignore-cursor-events",
+    "core:window:allow-set-always-on-top",
+    "core:webview:allow-create-webview-window",
+    "updater:default",
+    "process:default"
+  ]
+}

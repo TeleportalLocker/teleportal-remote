@@ -1,0 +1,11 @@
+%% Phase 11 — Overlay collaboratif Host
+
+flowchart LR
+  guestPtr[Guest_pointer]
+  sync[CursorSync_P10]
+  relay[Relay]
+  hostEmit[emit_remote_cursor]
+  overlayWin[cursor_overlay_window]
+  marker[HTML_marker]
+
+  guestPtr --> sync --> relay --> hostEmit --> overlayWin --> marker

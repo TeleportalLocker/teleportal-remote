@@ -1,0 +1,13 @@
+# Caddy reverse-proxy devant le relay.
+#
+# Local (défaut) : HTTP sur :8080
+# Prod : définir TELEPORTAL_DOMAIN=relay.example.com (+ TELEPORTAL_ACME_EMAIL)
+
+{
+	email {$TELEPORTAL_ACME_EMAIL:}
+}
+
+{$TELEPORTAL_DOMAIN::8080} {
+	encode gzip
+	reverse_proxy relay:7800
+}

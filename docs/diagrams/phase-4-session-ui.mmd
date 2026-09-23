@@ -1,0 +1,16 @@
+%% Phase 4 — UI session Host / Guest
+
+sequenceDiagram
+  participant UI
+  participant Tauri
+  participant Session
+  participant Relay
+
+  UI->>Tauri: host_start relayUrl
+  Tauri->>Session: start_host
+  Session->>Relay: Hello Host plus CreateSession
+  Relay-->>Session: SessionCreated code
+  Session-->>UI: session-state Hosting
+  Note over UI: affiche code 6 chiffres
+  Relay-->>Session: PeerJoined
+  Session-->>UI: session-state InSession

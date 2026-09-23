@@ -1,0 +1,14 @@
+%% Phase 5 — Pipeline DXGI Desktop Duplication
+
+flowchart LR
+  outputs[EnumOutputs]
+  dup[DuplicateOutput]
+  acquire[AcquireNextFrame]
+  copy[CopyResource_staging]
+  map[Map_BGRA_CPU]
+  frame[Frame_BGRA8]
+  release[ReleaseFrame]
+
+  outputs --> dup --> acquire --> copy --> map --> frame
+  acquire --> release
+  map --> release

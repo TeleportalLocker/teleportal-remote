@@ -1,0 +1,22 @@
+# Contexte Docker = racine du monorepo (voir compose.yml).
+target
+**/node_modules
+**/dist
+.git
+.DS_Store
+*.dmg
+*.msi
+*.exe
+*.sig
+*.log
+infra/release/.updater-private.key
+infra/release/.updater-private.key.pub
+.env
+.env.*
+!.env.example
+apps/desktop-client/src-tauri/target
+apps/desktop-client/src-tauri/gen
+*.p12
+*.pem
+*.key
+!infra/release/updater.pubkey

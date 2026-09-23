@@ -1,0 +1,223 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  CI: true
+
+jobs:
+  windows:
+    name: Windows NSIS + MSI
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/desktop-client/package-lock.json
+
+      - name: Install WiX Toolset
+        run: choco install wixtoolset --yes
+
+      - name: Add WiX to PATH
+        shell: pwsh
+        run: |
+          $wix = "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin"
+          if (-not (Test-Path $wix)) {
+            $wix = Get-ChildItem "${env:ProgramFiles(x86)}\WiX Toolset*" -Directory |
+              Select-Object -First 1 -ExpandProperty FullName
+            $wix = Join-Path $wix "bin"
+          }
+          echo $wix | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            apps/desktop-client/src-tauri
+
+      - name: Install npm deps
+        working-directory: apps/desktop-client
+        run: npm ci
+
+      - name: OS signing status (Windows)
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)) {
+            Write-Host "Authenticode: disabled (no WINDOWS_CERTIFICATE secret)"
+          } else {
+            Write-Host "Authenticode: enabled (WINDOWS_CERTIFICATE present)"
+          }
+
+      - name: Tauri build (NSIS + MSI + updater sigs)
+        working-directory: apps/desktop-client
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: npm run tauri build
+
+      - name: Upload Windows artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            target/release/bundle/nsis/*
+            target/release/bundle/msi/*
+            apps/desktop-client/src-tauri/target/release/bundle/nsis/*
+            apps/desktop-client/src-tauri/target/release/bundle/msi/*
+          if-no-files-found: error
+
+  macos:
+    name: macOS DMG (arm64 + x64)
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/desktop-client/package-lock.json
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            apps/desktop-client/src-tauri
+
+      - name: Install npm deps
+        working-directory: apps/desktop-client
+        run: npm ci
+
+      - name: OS signing status (macOS)
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "Apple codesign/notarize: disabled (no APPLE_CERTIFICATE secret)"
+          else
+            echo "Apple codesign/notarize: enabled (APPLE_CERTIFICATE present)"
+          fi
+
+      - name: Tauri build Apple Silicon
+        working-directory: apps/desktop-client
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run tauri build -- --target aarch64-apple-darwin
+
+      - name: Tauri build Intel
+        working-directory: apps/desktop-client
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run tauri build -- --target x86_64-apple-darwin
+
+      - name: Collect DMGs and updater artefacts
+        run: |
+          mkdir -p dist-release
+          for f in target/aarch64-apple-darwin/release/bundle/dmg/*.dmg \
+                   apps/desktop-client/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg; do
+            [[ -f "$f" ]] || continue
+            cp "$f" "dist-release/$(basename "${f%.dmg}")-aarch64.dmg"
+            [[ -f "${f}.sig" ]] && cp "${f}.sig" "dist-release/$(basename "${f%.dmg}")-aarch64.dmg.sig"
+          done
+          for f in target/x86_64-apple-darwin/release/bundle/dmg/*.dmg \
+                   apps/desktop-client/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg; do
+            [[ -f "$f" ]] || continue
+            cp "$f" "dist-release/$(basename "${f%.dmg}")-x86_64.dmg"
+            [[ -f "${f}.sig" ]] && cp "${f}.sig" "dist-release/$(basename "${f%.dmg}")-x86_64.dmg.sig"
+          done
+          # Updater .app.tar.gz (+ .sig) if produced
+          find target apps/desktop-client/src-tauri/target -type f \( -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \) \
+            -exec cp {} dist-release/ \; 2>/dev/null || true
+          ls -la dist-release
+
+      - name: Upload macOS artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmgs
+          path: dist-release/*
+          if-no-files-found: error
+
+  publish:
+    name: GitHub Release
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Windows artefacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installers
+          path: artefacts/windows
+
+      - name: Download macOS artefacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-dmgs
+          path: artefacts/macos
+
+      - name: Flatten artefacts
+        run: |
+          mkdir -p release-assets
+          find artefacts -type f \( -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o -name '*.sig' -o -name '*.tar.gz' -o -name '*.zip' \) \
+            -exec cp {} release-assets/ \;
+          ls -la release-assets
+
+      - name: Build latest.json
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          chmod +x infra/release/build-latest-json.sh
+          infra/release/build-latest-json.sh "$VERSION" "$GITHUB_REPOSITORY" release-assets release-assets/latest.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
