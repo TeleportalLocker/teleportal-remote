@@ -43,11 +43,9 @@ Alternative API key notarisation (optionnel, à la place de Apple ID/password) :
 
 Dans [`release.yml`](../../.github/workflows/release.yml) :
 
-- Les variables `APPLE_*` / `WINDOWS_*` sont injectées dans les steps `tauri build`.
-- **Sans secrets** : Tauri produit des bundles non signés OS (comportement actuel) ; le job réussit.
-- **Avec secrets** : Tauri codesign / notarize / Authenticode selon la plateforme.
-
-Un step « OS signing status » logue si les secrets sont présents (oui/non), sans jamais afficher leur valeur.
+- Les variables `APPLE_*` / `WINDOWS_*` ne sont **exportées** vers `tauri build` que si le certificat est non vide (sinon `unset` — évite l’échec `security import` avec un secret vide / placeholder).
+- **Sans secrets** : Tauri produit des bundles non signés OS ; le job réussit.
+- **Avec secrets valides** : Tauri codesign / notarize / Authenticode selon la plateforme.
 
 ## Préparation locale des secrets
 

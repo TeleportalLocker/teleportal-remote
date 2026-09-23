@@ -56,25 +56,23 @@ jobs:
         working-directory: apps/desktop-client
         run: npm ci
 
-      - name: OS signing status (Windows)
-        shell: pwsh
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-        run: |
-          if ([string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)) {
-            Write-Host "Authenticode: disabled (no WINDOWS_CERTIFICATE secret)"
-          } else {
-            Write-Host "Authenticode: enabled (WINDOWS_CERTIFICATE present)"
-          }
-
       - name: Tauri build (NSIS + MSI + updater sigs)
         working-directory: apps/desktop-client
+        shell: pwsh
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: npm run tauri build
+        run: |
+          if ([string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)) {
+            Remove-Item Env:WINDOWS_CERTIFICATE -ErrorAction SilentlyContinue
+            Remove-Item Env:WINDOWS_CERTIFICATE_PASSWORD -ErrorAction SilentlyContinue
+            Write-Host "Authenticode: disabled"
+          } else {
+            Write-Host "Authenticode: enabled"
+          }
+          npm run tauri build
 
       - name: Upload Windows artefacts
         uses: actions/upload-artifact@v4
@@ -117,16 +115,6 @@ jobs:
         working-directory: apps/desktop-client
         run: npm ci
 
-      - name: OS signing status (macOS)
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-        run: |
-          if [ -z "$APPLE_CERTIFICATE" ]; then
-            echo "Apple codesign/notarize: disabled (no APPLE_CERTIFICATE secret)"
-          else
-            echo "Apple codesign/notarize: enabled (APPLE_CERTIFICATE present)"
-          fi
-
       - name: Tauri build Apple Silicon
         working-directory: apps/desktop-client
         env:
@@ -138,7 +126,15 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run tauri build -- --target aarch64-apple-darwin
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+              APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
+            echo "Apple codesign/notarize: disabled"
+          else
+            echo "Apple codesign/notarize: enabled"
+          fi
+          npm run tauri build -- --target aarch64-apple-darwin
 
       - name: Tauri build Intel
         working-directory: apps/desktop-client
@@ -151,7 +147,15 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run tauri build -- --target x86_64-apple-darwin
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+              APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
+            echo "Apple codesign/notarize: disabled"
+          else
+            echo "Apple codesign/notarize: enabled"
+          fi
+          npm run tauri build -- --target x86_64-apple-darwin
 
       - name: Collect DMGs and updater artefacts
         run: |

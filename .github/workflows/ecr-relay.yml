@@ -2,7 +2,6 @@ name: Build & Push relay to ECR
 
 on:
   push:
-    branches: [main, master]
     paths:
       - "apps/relay-server/**"
       - "crates/protocol/**"
