@@ -6,7 +6,7 @@ Workflows réels : [`.github/workflows/`](../../.github/workflows/).
 |----------|------|
 | `ci.yml` | fmt, clippy, test (Ubuntu + deps GTK/WebKit pour le crate Tauri), frontend, capture Win/macOS |
 | `release.yml` | Installateurs + signatures updater + `latest.json` sur tag `v*` ; hooks signature OS optionnels |
-| `ecr-relay.yml` | Build `infra/docker/Dockerfile` → push `${ECR_REGISTRY}/teleportal-relay` (AWS ECR) |
+| `ecr-relay.yml` | Build → push `${ECR_REGISTRY}/teleportal-relay` (**manuel** : Actions → Run workflow) |
 
 ## Secrets
 

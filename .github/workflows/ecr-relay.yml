@@ -1,16 +1,6 @@
 name: Build & Push relay to ECR
 
 on:
-  push:
-    paths:
-      - "apps/relay-server/**"
-      - "crates/protocol/**"
-      - "crates/shared/**"
-      - "crates/transport/**"
-      - "infra/docker/Dockerfile"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".github/workflows/ecr-relay.yml"
   workflow_dispatch:
 
 env:

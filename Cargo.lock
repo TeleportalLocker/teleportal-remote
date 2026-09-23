@@ -4089,7 +4089,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-capture"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "core-graphics 0.25.0",
@@ -4104,7 +4104,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-cursor-sync"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "core-graphics 0.25.0",
  "teleportal-protocol",
@@ -4116,7 +4116,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-desktop-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4141,7 +4141,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-input"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "core-foundation 0.10.1",
  "core-graphics 0.25.0",
@@ -4154,7 +4154,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-protocol"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rmp-serde",
  "serde",
@@ -4166,7 +4166,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-relay-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -4182,7 +4182,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-shared"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "tracing",
  "tracing-subscriber",
@@ -4190,7 +4190,7 @@ dependencies = [
 
 [[package]]
 name = "teleportal-transport"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -4204,14 +4204,14 @@ dependencies = [
 
 [[package]]
 name = "teleportal-updater"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "teleportal-shared",
 ]
 
 [[package]]
 name = "teleportal-video-stream"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "openh264",
@@ -4383,8 +4383,12 @@ checksum = "7a9daff607c6d2bf6c16fd681ccb7eecc83e4e2cdc1ca067ffaadfca5de7f084"
 dependencies = [
  "futures-util",
  "log",
+ "rustls",
+ "rustls-pki-types",
  "tokio",
+ "tokio-rustls",
  "tungstenite 0.26.2",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]
@@ -4680,6 +4684,8 @@ dependencies = [
  "httparse",
  "log",
  "rand",
+ "rustls",
+ "rustls-pki-types",
  "sha1",
  "thiserror 2.0.20",
  "utf-8",
@@ -5032,6 +5038,24 @@ name = "webpki-root-certs"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
+dependencies = [
+ "rustls-pki-types",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "0.26.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
+dependencies = [
+ "webpki-roots 1.0.9",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
 dependencies = [
  "rustls-pki-types",
 ]

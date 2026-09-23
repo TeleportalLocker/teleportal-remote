@@ -31,7 +31,7 @@ Le relay est déployé dans [`TeleportalOperator/docker-compose.yml`](../../Tele
 - Image ECR : `${ECR_REGISTRY}/teleportal-relay` (workflow [`.github/workflows/ecr-relay.yml`](../../.github/workflows/ecr-relay.yml))
 - DNS : enregistrement A/AAAA `relay` → IP du VPS (cert ACME Traefik)
 
-Push image (CI) : push sur `main` (chemins relay) ou Actions → **Build & Push relay to ECR** → Run workflow.
+Push image (CI) : Actions → **Build & Push relay to ECR** → Run workflow (manuel uniquement).
 
 ### Compose standalone (ce dossier)
 
