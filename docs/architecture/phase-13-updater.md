@@ -15,7 +15,7 @@ GitHub Release (installers + .sig + latest.json)
 
 Endpoint :
 
-`https://github.com/teleportal/teleportal-remote/releases/latest/download/latest.json`
+`https://github.com/TeleportalLocker/teleportal-remote/releases/latest/download/latest.json`
 
 ## Composants
 

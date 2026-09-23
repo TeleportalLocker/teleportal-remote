@@ -20,8 +20,8 @@ Durcir le **runtime** (relay) et **préparer** la signature OS des installateurs
 Client  --ws/wss-->  Caddy  --http-->  teleportal-relay-server:7800
 ```
 
-- Local : `ws://127.0.0.1:8080/ws`
-- Prod : `wss://relay.example.com/ws` via `TELEPORTAL_RELAY_URL`
+- Local : `ws://127.0.0.1:8080/ws` (override `TELEPORTAL_RELAY_URL`)
+- Prod (défaut client) : `wss://relay.teleportal.fr/ws`
 
 IP client pour le rate-limit : `X-Forwarded-For` / `X-Real-IP` si présents (Caddy).
 

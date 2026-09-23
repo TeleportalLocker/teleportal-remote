@@ -55,7 +55,7 @@ if (!root) {
 
 const model: AppModel = {
   screen: "home",
-  relayUrl: "ws://127.0.0.1:7800/ws",
+  relayUrl: "wss://relay.teleportal.fr/ws",
   version: "",
   state: { kind: "idle" },
   joinCode: "",

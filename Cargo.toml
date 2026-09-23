@@ -18,7 +18,7 @@ version = "0.1.0"
 edition = "2021"
 license = "Proprietary"
 authors = ["Teleportal"]
-repository = "https://github.com/teleportal/teleportal-remote"
+repository = "https://github.com/TeleportalLocker/teleportal-remote"
 
 [workspace.dependencies]
 anyhow = "1"

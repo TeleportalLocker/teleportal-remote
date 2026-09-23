@@ -13,7 +13,7 @@ pub const STABLE_CHANNEL: &str = "stable";
 
 /// URL du manifeste GitHub Releases (`latest.json`).
 pub const LATEST_JSON_URL: &str =
-    "https://github.com/teleportal/teleportal-remote/releases/latest/download/latest.json";
+    "https://github.com/TeleportalLocker/teleportal-remote/releases/latest/download/latest.json";
 
 /// Retourne la version workspace (smoke link vers `teleportal-shared`).
 #[must_use]

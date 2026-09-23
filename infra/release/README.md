@@ -14,7 +14,7 @@ Signature OS / notarisation : hooks + runbook Phase 14 — **effectifs seulement
 
 Endpoint client :
 
-`https://github.com/teleportal/teleportal-remote/releases/latest/download/latest.json`
+`https://github.com/TeleportalLocker/teleportal-remote/releases/latest/download/latest.json`
 
 ## Secrets GitHub
 
@@ -58,7 +58,7 @@ Sans clé, `tauri build` échoue si `createUpdaterArtifacts` est actif.
 ## Manifeste
 
 ```bash
-infra/release/build-latest-json.sh 0.1.1 teleportal/teleportal-remote ./release-assets ./latest.json
+infra/release/build-latest-json.sh 0.1.1 TeleportalLocker/teleportal-remote ./release-assets ./latest.json
 ```
 
 ## CI

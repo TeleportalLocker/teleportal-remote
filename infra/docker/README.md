@@ -22,6 +22,19 @@ export TELEPORTAL_RELAY_URL=ws://127.0.0.1:8080/ws
 
 ## Production (HTTPS Let’s Encrypt)
 
+### Via TeleportalOperator (recommandé)
+
+Le relay est déployé dans [`TeleportalOperator/docker-compose.yml`](../../TeleportalOperator/docker-compose.yml) derrière Traefik :
+
+- Host : `relay.teleportal.fr`
+- Client : `TELEPORTAL_RELAY_URL=wss://relay.teleportal.fr/ws`
+- Image ECR : `${ECR_REGISTRY}/teleportal-relay` (workflow [`.github/workflows/ecr-relay.yml`](../../.github/workflows/ecr-relay.yml))
+- DNS : enregistrement A/AAAA `relay` → IP du VPS (cert ACME Traefik)
+
+Push image (CI) : push sur `main` (chemins relay) ou Actions → **Build & Push relay to ECR** → Run workflow.
+
+### Compose standalone (ce dossier)
+
 Dans `.env` :
 
 ```bash

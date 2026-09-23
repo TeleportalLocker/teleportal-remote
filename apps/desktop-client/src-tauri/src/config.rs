@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 /// URL WebSocket du relay par défaut.
-pub const DEFAULT_RELAY_URL: &str = "ws://127.0.0.1:7800/ws";
+pub const DEFAULT_RELAY_URL: &str = "wss://relay.teleportal.fr/ws";
 
 /// Config exposée au frontend.
 #[derive(Debug, Clone, Serialize)]
