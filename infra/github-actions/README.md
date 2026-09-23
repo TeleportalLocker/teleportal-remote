@@ -4,7 +4,7 @@ Workflows réels : [`.github/workflows/`](../../.github/workflows/).
 
 | Workflow | Rôle |
 |----------|------|
-| `ci.yml` | fmt, clippy, test, frontend, capture Win/macOS |
+| `ci.yml` | fmt, clippy, test (Ubuntu + deps GTK/WebKit pour le crate Tauri), frontend, capture Win/macOS |
 | `release.yml` | Installateurs + signatures updater + `latest.json` sur tag `v*` ; hooks signature OS optionnels |
 
 ## Secrets
